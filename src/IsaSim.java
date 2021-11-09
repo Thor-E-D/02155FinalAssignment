@@ -57,9 +57,6 @@ public class IsaSim {
 
         pc = 0;
 
-        System.out.println(Integer.MAX_VALUE);
-        System.out.println(Integer.MAX_VALUE << 1);
-
         while(true) {
 
             int instr = progr[pc >> 2];
