@@ -22,7 +22,7 @@ public class IsaSim {
     // Here the first program hard coded as an array
     static byte[] buf;
     static Integer[] progr;
-    static String input_path = "tests/task1/shift2.bin";
+    static String input_path = "tests/task2/branchtrap.bin";
     static {
         try {
             buf = Files.readAllBytes(Paths.get(input_path));
@@ -56,6 +56,7 @@ public class IsaSim {
         System.out.println("Hello RISC-V World!");
 
         pc = 0;
+
 
         while(true) {
 
@@ -168,6 +169,46 @@ public class IsaSim {
                 case 0x37: //lui
                     reg[rd] = (immTypeU << 12) & 0xFFFFF000;
                     break;
+                case 0x63: //branches //note rd is the lower offset and func7 is the higher
+                    switch (funct3) {
+                        case 0x0: //beq
+                            if (reg[rs1] == reg[rs2]) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                            break;
+                        case 0x1: //bne
+                            if (reg[rs1] != reg[rs2]) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                            break;
+                        case 0x4: //blt
+                            if (reg[rs1] < reg[rs2]) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                            break;
+                        case 0x5: //bqe
+                            if (reg[rs1] >= reg[rs2]) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                            break;
+                        case 0x6: //bltu
+                            if ((reg[rs1]& 0xffffffffL) < (reg[rs2]& 0xffffffffL)) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                        case 0x7: //bqeu
+                            if ((reg[rs1]& 0xffffffffL) >= (reg[rs2]& 0xffffffffL)) {
+                                pc = pc + calculateBranch(funct7,rd);
+                                continue;
+                            }
+                            break;
+                        default:
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                    }
                 case 0x73: //ecall
                     //TODO print everything
                     break;
@@ -189,6 +230,17 @@ public class IsaSim {
 
         System.out.println("Program exit");
 
+    }
+
+    public static int calculateBranch(int funct7, int rd) {
+        int tmpRes = 0;
+        tmpRes = tmpRes | (rd & 0x1E);
+        tmpRes = tmpRes | (funct7 & 0x3F) << 5;
+        tmpRes = tmpRes | (rd & 0x1) << 11;
+        if ((funct7 & 0x40) >> 6 == 1) {
+            tmpRes = tmpRes | 0xFFFFF000;
+        }
+        return tmpRes;
     }
 
 }
