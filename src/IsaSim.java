@@ -156,6 +156,9 @@ public class IsaSim {
                             break;
                     }
                     break;
+                case 0x17: //auipc
+                    reg[rd] =pc + ((immTypeU << 12) & 0xFFFFF000);
+                    break;
                 case 0x23: // store instructions
                     //constructing immediate for store instructions
                     int immStore = rd | funct7 << 5;

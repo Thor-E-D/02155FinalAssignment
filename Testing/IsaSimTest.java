@@ -38,6 +38,22 @@ class IsaSimTest {
     }
 
     @org.junit.jupiter.api.Test
+    void instructionTests() throws IOException, ClassNotFoundException {
+        testBinaryDump("InstructionTests/","test_add");
+        testBinaryDump("InstructionTests/","test_addi");
+        testBinaryDump("InstructionTests/","test_and");
+        testBinaryDump("InstructionTests/","test_andi");
+        testBinaryDump("InstructionTests/","test_auipc");
+        testBinaryDump("InstructionTests/","test_beq");
+        testBinaryDump("InstructionTests/","test_bge");
+        testBinaryDump("InstructionTests/","test_bgeu");
+        testBinaryDump("InstructionTests/","test_blt");
+        testBinaryDump("InstructionTests/","test_bltu");
+        testBinaryDump("InstructionTests/","test_bne");
+        testBinaryDump("InstructionTests/","test_div");
+    }
+
+    @org.junit.jupiter.api.Test
     void task2Tests() throws IOException, ClassNotFoundException {
         testBinaryDump("task2/","branchcnt");
         testBinaryDump("task2/","branchmany");
