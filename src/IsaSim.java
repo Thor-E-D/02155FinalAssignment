@@ -38,7 +38,7 @@ public class IsaSim {
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
             System.out.println(Integer.toHexString(list.get(i)));
-            // We used to use the below if statement to break but it does not work for string.bin in task3
+            //TODO: Change this so we break in the switch if we get the exit ecall.
             if (list.get(i) == 0x73) { //4 is at the end of the usefull data for every .bin file in task1 and task2. We do not know why
                 //list.remove(i);
                 break;
@@ -66,6 +66,8 @@ public class IsaSim {
 
         progr = convert(buf);
         System.out.println("Hello RISC-V World!");
+
+
 
         pc = 0;
         while(true) {
@@ -276,8 +278,24 @@ public class IsaSim {
                             System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
                     }
                 case 0x73: //ecall
-                    //TODO print everything
+                    //TODO make logic for different ecalls And print on exit
                     break;
+                case 0x6f: //jal
+                    // Creating the offset:
+                    int offset = imm & 0x7FE;
+                    offset = offset | ((imm & 0x1) << 11);
+                    offset = offset | (instr & 0xFF000);
+                    offset = offset | ((imm & 0x800) << 20);
+                    if ((imm & 0x800) >> 11 == 1) { //if the last bit is 1 sign extend with mask
+                        offset = offset | 0xFFF80000;
+                    }
+                    reg[rd] = pc + 4;
+                    pc += offset;
+                    continue;
+                case 0x67: //jalr
+                    reg[rd] = pc + 4;
+                    pc = reg[rs1] + imm;
+                    continue;
                 default:
                     System.out.println("Opcode " + Integer.toHexString(opcode)  + " not yet implemented");
                     break;
