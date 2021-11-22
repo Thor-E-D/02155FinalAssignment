@@ -1,3 +1,6 @@
+
+import sun.misc.IOUtils;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -5,6 +8,7 @@ import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * RISC-V Instruction Set Simulator
@@ -18,19 +22,13 @@ public class IsaSim {
 
     static int pc;
     static int reg[] = new int[32];
+    static byte[] memoryArr = new byte[1000000];
 
     // Here the first program hard coded as an array
     static byte[] buf;
     static Integer[] progr;
-    static String input_path = "tests/task2/branchtrap.bin";
-    static {
-        try {
-            buf = Files.readAllBytes(Paths.get(input_path));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    static String output_path;
 
-    }
     public static Integer[] convert(byte[] buf) {
         ArrayList<Integer> list = new ArrayList<>();
         int offset = 0;
@@ -40,8 +38,9 @@ public class IsaSim {
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
             System.out.println(Integer.toHexString(list.get(i)));
-            if (list.get(i) == 4) { //4 is at the end for every .bin file. We do not know why
-                list.remove(i);
+            // We used to use the below if statement to break but it does not work for string.bin in task3
+            if (list.get(i) == 0x73) { //4 is at the end of the usefull data for every .bin file in task1 and task2. We do not know why
+                //list.remove(i);
                 break;
             }
         }
@@ -51,13 +50,24 @@ public class IsaSim {
         return arr;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        //Read file name
+        if (args.length < 2) {
+            System.out.println("Expecting two arguments: path to input file, path to output file");
+        }
+
+        try {
+            buf = Files.readAllBytes(Paths.get(args[0]));
+        } catch (IOException e) {
+            System.out.println("INPUT FILE NOT FOUND!");
+            e.printStackTrace();
+        }
+        output_path = args[1];
+
         progr = convert(buf);
         System.out.println("Hello RISC-V World!");
 
         pc = 0;
-
-
         while(true) {
 
             int instr = progr[pc >> 2];
@@ -71,6 +81,38 @@ public class IsaSim {
             int immTypeU = (instr >> 12);
 
             switch (opcode) {
+                case 0x3: // load instructions
+                    switch (funct3) {
+                        case 0x0: //lb
+                            reg[rd] = memoryArr[reg[rs1] + imm];
+                            break;
+                        case 0x1: //lh
+                            int tmpRes = 0;
+                            tmpRes = tmpRes | (memoryArr[reg[rs1]+ imm] & 0xFF);
+                            tmpRes = tmpRes | (memoryArr[reg[rs1]+ imm + 1] << 8);
+                            reg[rd] = tmpRes;
+                            break;
+                        case 0x2: //lw
+                            tmpRes = 0;
+                            for (int i = 0; i < 4; i++) {
+                                tmpRes = tmpRes | ((memoryArr[reg[rs1]+ imm + i] & 0xFF) << i*8);
+                            }
+                            reg[rd] = tmpRes;
+                            break;
+                        case 0x4: //lbu
+                            reg[rd] = memoryArr[reg[rs1] + imm] & 0xFF;
+                            break;
+                        case 0x5: //lhu
+                            tmpRes = 0;
+                            for (int i = 0; i < 2; i++) {
+                                tmpRes = tmpRes | ((memoryArr[reg[rs1]+ imm + i] & 0xFF) << i*8);
+                            }
+                            reg[rd] = tmpRes;
+                            break;
+                        default:
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                    }
+                    break;
                 case 0x13:
                     switch (funct3) {
                         case 0x0: //addi
@@ -112,6 +154,27 @@ public class IsaSim {
                         default:
                             System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
                             break;
+                    }
+                    break;
+                case 0x23: // store instructions
+                    //constructing immediate for store instructions
+                    int immStore = rd | funct7 << 5;
+                    switch (funct3) {
+                        case 0x0: //sb
+                            memoryArr[reg[rs1]+immStore] = (byte) reg[rs2];
+                            break;
+                        case 0x1: //sh
+                            for (int i = 0; i < 2; i++) {
+                                memoryArr[reg[rs1]+immStore+i] = (byte) (reg[rs2] >> i*8);
+                            }
+                            break;
+                        case 0x2: //sw
+                            for (int i = 0; i < 4; i++) {
+                                memoryArr[reg[rs1]+immStore+i] = (byte) (reg[rs2] >> i*8);
+                            }
+                            break;
+                        default:
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
                     }
                     break;
                 case 0x33:
@@ -227,6 +290,13 @@ public class IsaSim {
             }
             System.out.println();
         }
+
+        //Creating a binary dump of the output.
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+                output_path));
+        oos.writeObject(reg);
+        oos.close();
+        Arrays.fill(reg,0);
 
         System.out.println("Program exit");
 
