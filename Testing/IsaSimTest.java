@@ -87,7 +87,7 @@ class IsaSimTest {
 
     @org.junit.jupiter.api.Test
     void tmpTesting() throws IOException, ClassNotFoundException {
-        testBinaryDump("task4/","t15");
+        testBinaryDump("InstructionTests/","test_beq");
     }
 
 }

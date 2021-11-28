@@ -22,17 +22,16 @@ public class IsaSim {
 
     static int pc;
     static int reg[] = new int[32];
-    static byte[] memoryArr = new byte[1000000];
+    static byte[] memoryArr;
 
-    // Here the first program hard coded as an array
     static byte[] buf;
-    static Integer[] progr;
     static String output_path;
     private static boolean debuggingMode = true; //if set to true registers will be printed after every instruction
 
     public static Integer[] convert(byte[] buf) {
         ArrayList<Integer> list = new ArrayList<>();
         int offset = 0;
+
         for(int i = 0; i < buf.length / 4; i++) {
 
             list.add((buf[3 + offset] & 0xFF)<< 24 | ((buf[2 + offset] & 0xFF) << 16) |
@@ -56,21 +55,26 @@ public class IsaSim {
 
         try {
             buf = Files.readAllBytes(Paths.get(args[0]));
+            memoryArr = new byte[1000000 + buf.length];
         } catch (IOException e) {
             System.out.println("INPUT FILE NOT FOUND!");
             e.printStackTrace();
         }
         output_path = args[1];
 
-        progr = convert(buf);
+        //placing the instructions in memory
+        for (int i = 0; i < buf.length; i++) {
+            memoryArr[i] = buf[i];
+        }
+
+
         System.out.println("Hello RISC-V World!");
-
-
-
         pc = 0;
         while(true) {
 
-            int instr = progr[pc >> 2];
+            int instr = ((memoryArr[3 + pc] & 0xFF)<< 24 | ((memoryArr[2 + pc] & 0xFF) << 16) |
+                    ((memoryArr[1 + pc] & 0xFF) << 8) | ((memoryArr[0 + pc] & 0xFF))); //loading in the instruction from memory
+            System.out.println(Integer.toHexString(instr));
             int opcode = instr & 0x7f;
             int funct3 = (instr >> 12) & 0x7;
             int funct7 = (instr >> 25) & 0x7f;
@@ -275,16 +279,15 @@ public class IsaSim {
                         default:
                             System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
                     }
+                    break;
                 case 0x73: //ecall
-                    if (reg[17] == 10) {
+                    if (true) {
                         for (int i = 0; i < reg.length; ++i) {
                             System.out.print(reg[i] + " ");
                         }
                         exit();
                         return;
                     }
-
-                    //TODO make logic for different ecalls And print on exit
                     break;
                 case 0x6f: //jal
                     // Creating the offset:
@@ -317,11 +320,10 @@ public class IsaSim {
                 }
                 System.out.println();
             }
-            if ((pc >> 2) >= progr.length) {
+            if ((pc >> 2) >= memoryArr.length) {
                 break;
             }
         }
-
         exit();
 
     }
@@ -333,6 +335,7 @@ public class IsaSim {
         oos.writeObject(reg);
         oos.close();
         Arrays.fill(reg,0);
+        Arrays.fill(memoryArr, (byte) 0);
 
         System.out.println("Program exit");
     }
