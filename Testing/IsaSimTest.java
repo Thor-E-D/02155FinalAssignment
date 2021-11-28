@@ -63,7 +63,9 @@ class IsaSimTest {
     @org.junit.jupiter.api.Test
     void task3Tests() throws IOException, ClassNotFoundException {
         testBinaryDump("task3/","width");
-        //testBinaryDump("task3/","string"); // How are we suppose to do this?
+        testBinaryDump("task3/","loop");
+        testBinaryDump("task3/","recursive");
+        testBinaryDump("task3/","string");
     }
 
     @org.junit.jupiter.api.Test
@@ -79,15 +81,10 @@ class IsaSimTest {
         testBinaryDump("task4/","t9");
         testBinaryDump("task4/","t10");
         testBinaryDump("task4/","t11");
-        //testBinaryDump("task4/","t12");
-        //testBinaryDump("task4/","t13");
-        //testBinaryDump("task4/","t14");
+        testBinaryDump("task4/","t12");
+        testBinaryDump("task4/","t13");
+        testBinaryDump("task4/","t14");
         testBinaryDump("task4/","t15");
-    }
-
-    @org.junit.jupiter.api.Test
-    void tmpTesting() throws IOException, ClassNotFoundException {
-        testBinaryDump("InstructionTests/","test_beq");
     }
 
 }

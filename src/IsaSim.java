@@ -37,10 +37,15 @@ public class IsaSim {
             list.add((buf[3 + offset] & 0xFF)<< 24 | ((buf[2 + offset] & 0xFF) << 16) |
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
-            if (debuggingMode) {
-                System.out.println(Integer.toHexString(list.get(i)));
+        }
+        System.out.println("should be:");
+        if (debuggingMode) {
+            for (Integer integer : list) {
+                System.out.print(integer + " ");
             }
         }
+        System.out.println();
+
         Integer[] arr = new Integer[list.size()];
         arr = list.toArray(arr);
 
@@ -55,7 +60,7 @@ public class IsaSim {
 
         try {
             buf = Files.readAllBytes(Paths.get(args[0]));
-            memoryArr = new byte[1000000 + buf.length];
+            memoryArr = new byte[1100000];
         } catch (IOException e) {
             System.out.println("INPUT FILE NOT FOUND!");
             e.printStackTrace();
@@ -83,6 +88,9 @@ public class IsaSim {
             int rs2 = (instr >> 20) & 0x01f;
             int imm = (instr >> 20);
             int immTypeU = (instr >> 12);
+
+            //If something was written to x0 remove it
+            reg[0] = 0;
 
             switch (opcode) {
                 case 0x3: // load instructions
@@ -165,7 +173,11 @@ public class IsaSim {
                     break;
                 case 0x23: // store instructions
                     //constructing immediate for store instructions
-                    int immStore = rd | funct7 << 5;
+                    int immStore = rd | (funct7 << 5);
+                    if ((funct7 >> 6) == 1) {
+                        immStore = immStore | 0xFFFFF000;
+                    }
+
                     switch (funct3) {
                         case 0x0: //sb
                             memoryArr[reg[rs1]+immStore] = (byte) reg[rs2];
@@ -176,6 +188,7 @@ public class IsaSim {
                             }
                             break;
                         case 0x2: //sw
+                            int tmpstit = reg[rs1]+immStore;
                             for (int i = 0; i < 4; i++) {
                                 memoryArr[reg[rs1]+immStore+i] = (byte) (reg[rs2] >> i*8);
                             }
@@ -309,8 +322,6 @@ public class IsaSim {
                     System.out.println("Opcode " + Integer.toHexString(opcode)  + " not yet implemented");
                     break;
             }
-            //If something was written to x0 remove it
-            reg[0] = 0;
 
             pc += 4; // One instruction is four bytes
 
@@ -329,6 +340,9 @@ public class IsaSim {
     }
 
     private static void exit() throws IOException {
+        //If something was written to x0 remove it
+        reg[0] = 0;
+
         //Creating a binary dump of the output.
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
                 output_path));
