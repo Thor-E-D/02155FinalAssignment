@@ -28,6 +28,7 @@ public class IsaSim {
     static byte[] buf;
     static Integer[] progr;
     static String output_path;
+    private static boolean debuggingMode = true; //if set to true registers will be printed after every instruction
 
     public static Integer[] convert(byte[] buf) {
         ArrayList<Integer> list = new ArrayList<>();
@@ -37,11 +38,8 @@ public class IsaSim {
             list.add((buf[3 + offset] & 0xFF)<< 24 | ((buf[2 + offset] & 0xFF) << 16) |
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
-            System.out.println(Integer.toHexString(list.get(i)));
-            //TODO: Change this so we break in the switch if we get the exit ecall.
-            if (list.get(i) == 0x73) { //4 is at the end of the usefull data for every .bin file in task1 and task2. We do not know why
-                //list.remove(i);
-                break;
+            if (debuggingMode) {
+                System.out.println(Integer.toHexString(list.get(i)));
             }
         }
         Integer[] arr = new Integer[list.size()];
@@ -278,6 +276,14 @@ public class IsaSim {
                             System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
                     }
                 case 0x73: //ecall
+                    if (reg[17] == 10) {
+                        for (int i = 0; i < reg.length; ++i) {
+                            System.out.print(reg[i] + " ");
+                        }
+                        exit();
+                        return;
+                    }
+
                     //TODO make logic for different ecalls And print on exit
                     break;
                 case 0x6f: //jal
@@ -300,18 +306,27 @@ public class IsaSim {
                     System.out.println("Opcode " + Integer.toHexString(opcode)  + " not yet implemented");
                     break;
             }
+            //If something was written to x0 remove it
+            reg[0] = 0;
 
             pc += 4; // One instruction is four bytes
 
-            for (int i = 0; i < reg.length; ++i) {
-                System.out.print(reg[i] + " ");
+            if (debuggingMode) {
+                for (int j : reg) {
+                    System.out.print(j + " ");
+                }
+                System.out.println();
             }
             if ((pc >> 2) >= progr.length) {
                 break;
             }
-            System.out.println();
         }
 
+        exit();
+
+    }
+
+    private static void exit() throws IOException {
         //Creating a binary dump of the output.
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
                 output_path));
@@ -320,7 +335,6 @@ public class IsaSim {
         Arrays.fill(reg,0);
 
         System.out.println("Program exit");
-
     }
 
     public static int calculateBranch(int funct7, int rd) {

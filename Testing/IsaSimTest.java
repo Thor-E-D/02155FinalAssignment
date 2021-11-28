@@ -54,11 +54,6 @@ class IsaSimTest {
     }
 
     @org.junit.jupiter.api.Test
-    void tmpTesting() throws IOException, ClassNotFoundException {
-        testBinaryDump("task3/","loop");
-    }
-
-    @org.junit.jupiter.api.Test
     void task2Tests() throws IOException, ClassNotFoundException {
         testBinaryDump("task2/","branchcnt");
         testBinaryDump("task2/","branchmany");
@@ -70,4 +65,29 @@ class IsaSimTest {
         testBinaryDump("task3/","width");
         //testBinaryDump("task3/","string"); // How are we suppose to do this?
     }
+
+    @org.junit.jupiter.api.Test
+    void task4Tests() throws IOException, ClassNotFoundException {
+        testBinaryDump("task4/","t1");
+        testBinaryDump("task4/","t2");
+        testBinaryDump("task4/","t3");
+        testBinaryDump("task4/","t4");
+        testBinaryDump("task4/","t5");
+        testBinaryDump("task4/","t6");
+        testBinaryDump("task4/","t7");
+        testBinaryDump("task4/","t8");
+        testBinaryDump("task4/","t9");
+        testBinaryDump("task4/","t10");
+        testBinaryDump("task4/","t11");
+        //testBinaryDump("task4/","t12");
+        //testBinaryDump("task4/","t13");
+        //testBinaryDump("task4/","t14");
+        testBinaryDump("task4/","t15");
+    }
+
+    @org.junit.jupiter.api.Test
+    void tmpTesting() throws IOException, ClassNotFoundException {
+        testBinaryDump("task4/","t15");
+    }
+
 }
