@@ -14,7 +14,8 @@ public class IsaSim {
     static String output_path;
 
     // If set to true registers will be printed after every instruction plus the value from the .res file if testing.
-    private static final boolean debuggingMode = false;
+    private static boolean debuggingMode = false;
+    static boolean makeOutputFile = true;
 
     // Only used in testing but placed in this file due to debugging.
     public static Integer[] convert(byte[] buf) {
@@ -27,6 +28,8 @@ public class IsaSim {
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
         }
+
+        // printing the expected value if testing.
         if (debuggingMode) {
             System.out.println("should be:");
             for (Integer integer : list) {
@@ -46,6 +49,10 @@ public class IsaSim {
         // Ensuring enough arguments used.
         if (args.length < 2) {
             System.out.println("Expecting two arguments: path to input file, path to output file");
+            System.out.println("Additional the path to output file can be set to false if no output file should be" +
+                    "generated");
+            System.out.println("Additional a third argument can be supplied setting the debuggingmode to true if" +
+                    " 'true' is supplied");
             return;
         }
 
@@ -56,7 +63,19 @@ public class IsaSim {
             System.out.println("INPUT FILE NOT FOUND!");
             e.printStackTrace();
         }
+
+        //output path
         output_path = args[1];
+        if (output_path.compareToIgnoreCase("false") == 0) {
+            makeOutputFile = false;
+        }
+
+        //debugging mode
+        if (args.length > 2 && args[2].compareToIgnoreCase("true") == 0) {
+            debuggingMode = true;
+        } else {
+            debuggingMode = false;
+        }
 
         // Placing the instructions in memory
         System.arraycopy(buf, 0, memoryArr, 0, buf.length);
@@ -70,6 +89,7 @@ public class IsaSim {
             int instr = ((memoryArr[3 + pc] & 0xFF)<< 24 | ((memoryArr[2 + pc] & 0xFF) << 16) |
                     ((memoryArr[1 + pc] & 0xFF) << 8) | ((memoryArr[0 + pc] & 0xFF)));
             if (debuggingMode) {
+                // We print the instruction in hex for easy comparison with ripes.
                 System.out.println("Executing instruction: " + Integer.toHexString(instr));
             }
             int opcode = instr & 0x7f;
@@ -352,10 +372,12 @@ public class IsaSim {
         reg[0] = 0;
 
         //Creating a binary dump of the output.
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-                output_path));
-        oos.writeObject(reg);
-        oos.close();
+        if (makeOutputFile) {
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+                    output_path));
+            oos.writeObject(reg);
+            oos.close();
+        }
 
         // Zero both the registers and the memory if another execution is to be done immediately after
         Arrays.fill(reg,0);
