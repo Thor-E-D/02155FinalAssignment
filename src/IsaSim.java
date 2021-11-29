@@ -1,33 +1,22 @@
-
-import sun.misc.IOUtils;
-
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-/**
- * RISC-V Instruction Set Simulator
- * <p>
- * A tiny first step to get the simulator started. Can execute just a single
- * RISC-V instruction.
- *
- * @author Martin Schoeberl (martin@jopdesign.com)
- */
 public class IsaSim {
 
     static int pc;
-    static int reg[] = new int[32];
-    static byte[] memoryArr;
+    static int[] reg = new int[32];
+    static byte[] memoryArr = new byte[1100000];
 
     static byte[] buf;
     static String output_path;
-    private static boolean debuggingMode = true; //if set to true registers will be printed after every instruction
 
+    // If set to true registers will be printed after every instruction plus the value from the .res file if testing.
+    private static final boolean debuggingMode = false;
+
+    // Only used in testing but placed in this file due to debugging.
     public static Integer[] convert(byte[] buf) {
         ArrayList<Integer> list = new ArrayList<>();
         int offset = 0;
@@ -38,13 +27,13 @@ public class IsaSim {
                     ((buf[1 + offset] & 0xFF) << 8) | ((buf[0 + offset] & 0xFF)));
             offset += 4;
         }
-        System.out.println("should be:");
         if (debuggingMode) {
+            System.out.println("should be:");
             for (Integer integer : list) {
                 System.out.print(integer + " ");
             }
+            System.out.println();
         }
-        System.out.println();
 
         Integer[] arr = new Integer[list.size()];
         arr = list.toArray(arr);
@@ -53,33 +42,36 @@ public class IsaSim {
     }
 
     public static void main(String[] args) throws IOException {
-        //Read file name
+
+        // Ensuring enough arguments used.
         if (args.length < 2) {
             System.out.println("Expecting two arguments: path to input file, path to output file");
+            return;
         }
 
+        // Try to read the input file
         try {
             buf = Files.readAllBytes(Paths.get(args[0]));
-            memoryArr = new byte[1100000];
         } catch (IOException e) {
             System.out.println("INPUT FILE NOT FOUND!");
             e.printStackTrace();
         }
         output_path = args[1];
 
-        //placing the instructions in memory
-        for (int i = 0; i < buf.length; i++) {
-            memoryArr[i] = buf[i];
-        }
+        // Placing the instructions in memory
+        System.arraycopy(buf, 0, memoryArr, 0, buf.length);
 
 
         System.out.println("Hello RISC-V World!");
         pc = 0;
         while(true) {
 
+            // Loading in the instruction from memory done in this order due to endians.
             int instr = ((memoryArr[3 + pc] & 0xFF)<< 24 | ((memoryArr[2 + pc] & 0xFF) << 16) |
-                    ((memoryArr[1 + pc] & 0xFF) << 8) | ((memoryArr[0 + pc] & 0xFF))); //loading in the instruction from memory
-            System.out.println(Integer.toHexString(instr));
+                    ((memoryArr[1 + pc] & 0xFF) << 8) | ((memoryArr[0 + pc] & 0xFF)));
+            if (debuggingMode) {
+                System.out.println("Executing instruction: " + Integer.toHexString(instr));
+            }
             int opcode = instr & 0x7f;
             int funct3 = (instr >> 12) & 0x7;
             int funct7 = (instr >> 25) & 0x7f;
@@ -122,7 +114,8 @@ public class IsaSim {
                             reg[rd] = tmpRes;
                             break;
                         default:
-                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                    + Integer.toHexString(funct3) + " not yet implemented");
                     }
                     break;
                 case 0x13:
@@ -153,7 +146,9 @@ public class IsaSim {
                                     reg[rd] = reg[rs1] >> (imm & 0x1f);
                                     break;
                                 default:
-                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7) + " not yet implemented");
+                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                            + Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7)
+                                            + " not yet implemented");
                                     break;
                             }
                             break;
@@ -164,7 +159,8 @@ public class IsaSim {
                             reg[rd] = reg[rs1] & imm;
                             break;
                         default:
-                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                    + Integer.toHexString(funct3) + " not yet implemented");
                             break;
                     }
                     break;
@@ -194,7 +190,8 @@ public class IsaSim {
                             }
                             break;
                         default:
-                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                    + Integer.toHexString(funct3) + " not yet implemented");
                     }
                     break;
                 case 0x33:
@@ -208,7 +205,9 @@ public class IsaSim {
                                     reg[rd] = reg[rs1] - reg[rs2];
                                     break;
                                 default:
-                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7) + " not yet implemented");
+                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                            + Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7)
+                                            + " not yet implemented");
                                     break;
                             }
                             break;
@@ -235,7 +234,9 @@ public class IsaSim {
                                     reg[rd] = reg[rs1] >> (reg[rs2] & 0x1f);
                                     break;
                                 default:
-                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7) + " not yet implemented");
+                                    System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " +
+                                            Integer.toHexString(funct3) + "funct7" + Integer.toHexString(funct7) +
+                                            " not yet implemented");
                                     break;
                             }
                             break;
@@ -246,7 +247,8 @@ public class IsaSim {
                             reg[rd] = reg[rs1] & reg[rs2];
                             break;
                         default:
-                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " +
+                                    Integer.toHexString(funct3) + " not yet implemented");
                     }
                     break;
                 case 0x37: //lui
@@ -290,10 +292,14 @@ public class IsaSim {
                             }
                             break;
                         default:
-                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: " + Integer.toHexString(funct3) + " not yet implemented");
+                            System.out.println("opcode: " + Integer.toHexString(opcode) + " funct3: "
+                                    + Integer.toHexString(funct3) + " not yet implemented");
                     }
                     break;
                 case 0x73: //ecall
+                    // Set to true since we only implement ecall 10.
+                    // Also since there is a difference in what register is set to 10 in the tasks and in
+                    // the additional test supplied in the repository.
                     if (true) {
                         for (int i = 0; i < reg.length; ++i) {
                             System.out.print(reg[i] + " ");
@@ -331,6 +337,7 @@ public class IsaSim {
                 }
                 System.out.println();
             }
+            // Should never reach this due to ecall being used.
             if ((pc >> 2) >= memoryArr.length) {
                 break;
             }
@@ -339,6 +346,7 @@ public class IsaSim {
 
     }
 
+    // Exiting the application.
     private static void exit() throws IOException {
         //If something was written to x0 remove it
         reg[0] = 0;
@@ -348,12 +356,17 @@ public class IsaSim {
                 output_path));
         oos.writeObject(reg);
         oos.close();
+
+        // Zero both the registers and the memory if another execution is to be done immediately after
         Arrays.fill(reg,0);
         Arrays.fill(memoryArr, (byte) 0);
 
+        System.out.println();
         System.out.println("Program exit");
+        System.out.println();
     }
 
+    // Helper method used in branch instructions.
     public static int calculateBranch(int funct7, int rd) {
         int tmpRes = 0;
         tmpRes = tmpRes | (rd & 0x1E);

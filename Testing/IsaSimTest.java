@@ -7,13 +7,13 @@ import java.nio.file.Paths;
 
 class IsaSimTest {
 
+    //Assuming the files to compare is in tests/ and in testOutput.
     public void testBinaryDump(String folder,String fileName) throws IOException, ClassNotFoundException {
         IsaSim.main(new String[] {"tests/"+ folder + fileName + ".bin","testOutput/" + fileName + ".res"});
 
         byte[] buf;
         buf = Files.readAllBytes(Paths.get("tests/" + folder + fileName + ".res"));
         Integer[] arrRes = IsaSim.convert(buf);
-        //Read objects or arrays from binary file "o.dat":
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
                 "testOutput/" + fileName + ".res"));
         int[] ia = (int[]) (ois.readObject());
@@ -21,7 +21,7 @@ class IsaSimTest {
 
         assertEquals(arrRes.length, ia.length);
         for (int i = 0; i < ia.length; i++) {
-            assertEquals((int) arrRes[i], ia[i]);
+            assertEquals((int) arrRes[i], ia[i]); //Checking that each of the registers are the same.
         }
     }
 
@@ -35,22 +35,6 @@ class IsaSimTest {
         testBinaryDump("task1/","set");
         testBinaryDump("task1/","shift");
         testBinaryDump("task1/","shift2");
-    }
-
-    @org.junit.jupiter.api.Test
-    void instructionTests() throws IOException, ClassNotFoundException {
-        testBinaryDump("InstructionTests/","test_add");
-        testBinaryDump("InstructionTests/","test_addi");
-        testBinaryDump("InstructionTests/","test_and");
-        testBinaryDump("InstructionTests/","test_andi");
-        testBinaryDump("InstructionTests/","test_auipc");
-        testBinaryDump("InstructionTests/","test_beq");
-        testBinaryDump("InstructionTests/","test_bge");
-        testBinaryDump("InstructionTests/","test_bgeu");
-        testBinaryDump("InstructionTests/","test_blt");
-        testBinaryDump("InstructionTests/","test_bne");
-        testBinaryDump("InstructionTests/","test_jal");
-        testBinaryDump("InstructionTests/","test_jalr");
     }
 
     @org.junit.jupiter.api.Test
@@ -85,6 +69,23 @@ class IsaSimTest {
         testBinaryDump("task4/","t13");
         testBinaryDump("task4/","t14");
         testBinaryDump("task4/","t15");
+    }
+
+    // Extra testing.
+    @org.junit.jupiter.api.Test
+    void instructionTests() throws IOException, ClassNotFoundException {
+        testBinaryDump("InstructionTests/","test_add");
+        testBinaryDump("InstructionTests/","test_addi");
+        testBinaryDump("InstructionTests/","test_and");
+        testBinaryDump("InstructionTests/","test_andi");
+        testBinaryDump("InstructionTests/","test_auipc");
+        testBinaryDump("InstructionTests/","test_beq");
+        testBinaryDump("InstructionTests/","test_bge");
+        testBinaryDump("InstructionTests/","test_bgeu");
+        testBinaryDump("InstructionTests/","test_blt");
+        testBinaryDump("InstructionTests/","test_bne");
+        testBinaryDump("InstructionTests/","test_jal");
+        testBinaryDump("InstructionTests/","test_jalr");
     }
 
 }
