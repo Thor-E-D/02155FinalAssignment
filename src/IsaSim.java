@@ -8,7 +8,7 @@ public class IsaSim {
 
     static int pc;
     static int[] reg = new int[32];
-    static byte[] memoryArr = new byte[1100000];
+    static byte[] memoryArr = new byte[1048576]; // 1 MibiByte
 
     static byte[] buf;
     static String output_path;
